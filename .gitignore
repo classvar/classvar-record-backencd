@@ -1,0 +1,4 @@
+/files/*
+/node_modules
+/security/cert.key
+/security/cert.pem
