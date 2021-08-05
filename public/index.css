@@ -22,11 +22,22 @@ p.borderBelow {
   padding: 0 0 20px 0;
 }
 
-video {
+video#gum {
   vertical-align: top;
-  --width: 25vw;
-  width: var(--width);
-  height: calc(var(--width) * 0.5625);
+  width: 1280px;
+  height: 720px;
+}
+
+video#gum2 {
+  vertical-align: top;
+  width: 320px;
+  height: 240px;
+}
+
+video#gum22 {
+  vertical-align: top;
+  width: 1280px;
+  height: 720px;
 }
 
 video:last-of-type {

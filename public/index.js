@@ -11,11 +11,19 @@
 
 "use strict";
 
-const RECORDER_UPLOAD_TIME_SLICE = 50; // ms
+const RECORDER_UPLOAD_TIME_SLICE = 1000; // ms
 const VIDEO_CONSTRAINTS = {
-  width: { ideal: 1280 },
-  height: { ideal: 720 },
+  width: { min: 1280 },
+  height: { min: 720 },
   frameRate: { ideal: 24 },
+  facingMode: "user",
+};
+
+const VIDEO_CONSTRAINTS_240 = {
+  width: { max: 320 },
+  height: { max: 240 },
+  frameRate: { ideal: 24 },
+  facingMode: "user",
 };
 
 // websocket!
@@ -113,7 +121,7 @@ function startRecording() {
   const options = { mimeType };
 
   try {
-    mediaRecorder = new MediaRecorder(window.stream, options);
+    mediaRecorder = new MediaRecorder(window.stream2, options);
   } catch (e) {
     console.error("Exception while creating MediaRecorder:", e);
     errorMsgElement.innerHTML = `Exception while creating MediaRecorder: ${JSON.stringify(
@@ -157,6 +165,15 @@ function handleSuccess(stream) {
   codecPreferences.disabled = false;
 }
 
+function handleSuccess240p(stream2) {
+  console.log("getUserMedia240p() got stream:", stream2);
+  window.stream2 = stream2;
+  const gumVideo2 = document.querySelector("video#gum2");
+  gumVideo2.srcObject = stream2;
+  const gumVideo22 = document.querySelector("video#gum22");
+  gumVideo22.srcObject = stream2;
+}
+
 async function init(constraints) {
   try {
     const stream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -164,6 +181,17 @@ async function init(constraints) {
   } catch (e) {
     console.error("navigator.getUserMedia error:", e);
     errorMsgElement.innerHTML = `navigator.getUserMedia error:${e.toString()}`;
+  }
+
+  try {
+    const stream2 = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: VIDEO_CONSTRAINTS_240,
+    });
+    handleSuccess240p(stream2);
+  } catch (e) {
+    console.error("22 navigator.getUserMedia error:", e);
+    errorMsgElement.innerHTML = `22 navigator.getUserMedia error:${e.toString()}`;
   }
 }
 
