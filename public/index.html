@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
- *  Copyright (c) 2015 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -9,22 +9,14 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="description" content="WebRTC code samples" />
-    <meta
-      name="viewport"
-      content="width=device-width, user-scalable=yes, initial-scale=1, maximum-scale=1"
-    />
-    <meta itemprop="description" content="Client-side WebRTC code samples" />
-    <meta itemprop="name" content="WebRTC code samples" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta id="theme-color" name="theme-color" content="#ffffff" />
-
-    <base target="_blank" />
-
-    <title>MediaStream Recording</title>
-
+    <title>Peer connection: adjust bandwidth</title>
     <link
       href="//fonts.googleapis.com/css?family=Roboto:300,400,500,700"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <link
+      href="//fonts.googleapis.com/css?family=Inconsolata"
       rel="stylesheet"
       type="text/css"
     />
@@ -35,70 +27,32 @@
   <body>
     <div id="container">
       <h1>
-        <a href="//webrtc.github.io/samples/" title="WebRTC samples homepage"
-          >WebRTC samples</a
-        >
-        <span>MediaRecorder</span>
+        <span>Peer connection: adjust bandwidth</span>
       </h1>
 
-      <p>
-        For more information see the MediaStream Recording API
-        <a
-          href="http://w3c.github.io/mediacapture-record/MediaRecorder.html"
-          title="W3C MediaStream Recording API Editor's Draft"
-          >Editor's&nbsp;Draft</a
-        >.
-      </p>
+      <video id="localVideo" playsinline autoplay muted></video>
+      <video id="remoteVideo" playsinline autoplay></video>
+      <video id="recorded" playsinline autoplay>
+        <source src="recorded.mp4" type="video/webm" />
+      </video>
 
-      <p>gum</p>
-      <video id="gum" playsinline autoplay muted></video>
-
-      <p>gum2</p>
-      <video id="gum2" playsinline autoplay muted></video>
-
-      <p>gum22</p>
-      <video id="gum22" playsinline autoplay muted></video>
-
-      <p>recorded</p>
-      <video id="recorded" playsinline loop></video>
-
-      <div>
-        <button id="start">Start camera</button>
-        <button id="record" disabled>Start Recording</button>
-        <button id="play" disabled>Play</button>
-        <button id="download" disabled>Download</button>
+      <div id="buttons">
+        <label>Bandwidth:</label>
+        <select id="bandwidth" disabled>
+          <option value="unlimited" selected>unlimited</option>
+          <option value="2000">2000</option>
+          <option value="1000">1000</option>
+          <option value="500">500</option>
+          <option value="250">250</option>
+          <option value="125">125</option>
+        </select>
+        kbps
+        <button id="callButton">Call</button>
+        <button id="hangupButton">Hang Up</button>
       </div>
-
-      <div>
-        Recording format:
-        <select id="codecPreferences" disabled></select>
-      </div>
-      <div>
-        Change resolution:
-        <select id="resolutionPreferences" disabled></select>
-      </div>
-      <div>
-        <h4>Media Stream Constraints options</h4>
-        <p>
-          Echo cancellation: <input type="checkbox" id="echoCancellation" />
-        </p>
-      </div>
-
-      <div>
-        <span id="errorMsg"></span>
-      </div>
-
-      <a
-        href="https://github.com/webrtc/samples/tree/gh-pages/src/content/getusermedia/record"
-        title="View source for this page on GitHub"
-        id="viewSource"
-        >View source on GitHub</a
-      >
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
-    <!-- include adapter for srcObject shim -->
-    <!-- <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script> -->
-    <script src="index.js"></script>
+    <script src="main.js" async></script>
   </body>
 </html>

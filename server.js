@@ -16,7 +16,7 @@ const secureServer = https.createServer(httpsOptions, app);
 const { Server } = require("socket.io");
 const io = new Server(secureServer);
 
-app.use(express.static("public"));
+app.use(express.static("public_record"));
 
 /*
 TODO:

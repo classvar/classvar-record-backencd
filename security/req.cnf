@@ -17,4 +17,5 @@ subjectAltName = @alt_names
 DNS.1 = www.localhost.com
 DNS.2 = localhost.com
 DNS.3 = localhost
-DNS.4 = 192.168.224.35
+DNS.4 = 192.168.194.2
+DNS.5 = 192.168.219.191

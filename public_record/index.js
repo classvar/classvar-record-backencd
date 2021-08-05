@@ -13,21 +13,16 @@
 
 const RECORDER_UPLOAD_TIME_SLICE = 1000; // ms
 const VIDEO_CONSTRAINTS = {
-  width: { min: 1280 },
-  height: { min: 720 },
-  frameRate: { ideal: 24 },
+  width: { ideal: 1080 },
+  height: { ideal: 720 },
+  frameRate: { min: 24 },
   facingMode: "user",
 };
 
-const VIDEO_CONSTRAINTS_240 = {
-  width: { max: 320 },
-  height: { max: 240 },
-  frameRate: { ideal: 24 },
-  facingMode: "user",
-};
+const IP = "192.168.219.191";
 
 // websocket!
-const socket = io("https://localhost:3000/");
+const socket = io(`https://${IP}:3000/`);
 let recordReady = false;
 
 socket.on("ready", () => {
@@ -118,10 +113,15 @@ function startRecording() {
   recordedBlobs = [];
   const mimeType =
     codecPreferences.options[codecPreferences.selectedIndex].value;
+
+  const fiveMbps_720p = 5 * 1024 * 1024;
+  const twoAndHalfMbps_480p = 2 * 1024 * 1024;
+  const oneMbps_360p = 1 * 1024 * 1024; // kilo
+  const halfMbps_240p = 600 * 1024; // kilo
   const options = { mimeType };
 
   try {
-    mediaRecorder = new MediaRecorder(window.stream2, options);
+    mediaRecorder = new MediaRecorder(window.stream, options);
   } catch (e) {
     console.error("Exception while creating MediaRecorder:", e);
     errorMsgElement.innerHTML = `Exception while creating MediaRecorder: ${JSON.stringify(
@@ -165,15 +165,6 @@ function handleSuccess(stream) {
   codecPreferences.disabled = false;
 }
 
-function handleSuccess240p(stream2) {
-  console.log("getUserMedia240p() got stream:", stream2);
-  window.stream2 = stream2;
-  const gumVideo2 = document.querySelector("video#gum2");
-  gumVideo2.srcObject = stream2;
-  const gumVideo22 = document.querySelector("video#gum22");
-  gumVideo22.srcObject = stream2;
-}
-
 async function init(constraints) {
   try {
     const stream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -181,17 +172,6 @@ async function init(constraints) {
   } catch (e) {
     console.error("navigator.getUserMedia error:", e);
     errorMsgElement.innerHTML = `navigator.getUserMedia error:${e.toString()}`;
-  }
-
-  try {
-    const stream2 = await navigator.mediaDevices.getUserMedia({
-      audio: true,
-      video: VIDEO_CONSTRAINTS_240,
-    });
-    handleSuccess240p(stream2);
-  } catch (e) {
-    console.error("22 navigator.getUserMedia error:", e);
-    errorMsgElement.innerHTML = `22 navigator.getUserMedia error:${e.toString()}`;
   }
 }
 
