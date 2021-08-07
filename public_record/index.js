@@ -11,18 +11,39 @@
 
 "use strict";
 
-const RECORDER_UPLOAD_TIME_SLICE = 1000; // ms
+document.addEventListener("DOMContentLoaded", () => {
+  const displayZone = document.getElementById("display_zone");
+  for (let i = 0; i < 20; i++)
+    // 240p는 매우 빠르다.
+    // 720p는 꽤 느리다.
+    displayZone.innerHTML =
+      displayZone.innerHTML +
+      `<video playsinline autoplay muted>
+      <source src="500_1000kbps.webm" type="video/webm" />
+    </video>`;
+});
+
+const RECORDER_UPLOAD_TIME_SLICE = 100; // ms
+
+const VIDEO_CONSTRAINTS_MOBILE = {
+  width: { ideal: 720 },
+  height: { ideal: 1280 },
+  frameRate: { min: 24 },
+  facingMode: "user",
+};
+
 const VIDEO_CONSTRAINTS = {
-  width: { ideal: 1080 },
+  width: { ideal: 1280 },
   height: { ideal: 720 },
   frameRate: { min: 24 },
   facingMode: "user",
 };
 
-const IP = "192.168.219.191";
-
 // websocket!
-const socket = io(`https://${IP}:3000/`);
+const IP = "192.168.219.191";
+const PORT = 3000;
+const socket = io(`https://${IP}:${PORT}/`);
+
 let recordReady = false;
 
 socket.on("ready", () => {
