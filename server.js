@@ -2,11 +2,14 @@ const { RTCPeerConnection } = require("wrtc");
 const { beforeOffer } = require("./server_ffmpeg");
 const { io } = require("./socketIoServer");
 
+console.log("running - server.js");
+
 const {
-  ICE_SERVERS_CONFIG,
+  PEER_CONNECTION_CONFIG,
   ICE_CANDIDATE,
   OFFER,
   ANSWER,
+  NEW_PEER_ICE_CANDIDATE,
 } = require("./pc_constants");
 
 /*
@@ -21,75 +24,115 @@ const {
 3. ConnectionStateChange 
 */
 let pcServer;
+const IS_CALLER = true;
 
-pcServer.addEventListener("connectionstatechange", (event) => {
-  switch (pc.connectionState) {
-    case "connected":
-      // The connection has become fully connected
-      trace("[WebRTC] User is fully connected");
-      break;
-    case "disconnected":
-    case "failed":
-      // One or more transports has terminated unexpectedly or in an error
-      trace("[WebRTC] User is unexpectedly disconnected");
-      break;
-    case "closed":
-      // The connection has been closed
-      trace("[WebRTC] Connection closed");
-      break;
-  }
-});
-
-io.on("connection", (serverSocket) => {
+io.on("connection", async (serverSocket) => {
   trace("[SocketIO] User connected");
 
   serverSocket.on("disconnect", () => {
     trace("[SocketIO] User disconnected");
+    pcServer.close();
   });
 
-  pcServer = new RTCPeerConnection(ICE_SERVERS_CONFIG);
+  // 씨발 뭐지?
+  pcServer = new RTCPeerConnection({ sdpSemantics: "unified-plan" });
+
+  trace(
+    "new PC\n- connectionState:",
+    pcServer.connectionState,
+    "\n- SignalingState: ",
+    pcServer.signalingState
+  );
+  // prepare recording
+  beforeOffer(pcServer);
 
   pcServer.addEventListener(ICE_CANDIDATE, ({ candidate }) => {
-    socket.emit(ICE_CANDIDATE, candidate);
-    trace("Sending new ICE Candidate: ", candidate);
+    trace("Sending new ICE Candidate: ");
+    serverSocket.emit(NEW_PEER_ICE_CANDIDATE, candidate);
+  });
+
+  // https://developer.mozilla.org/ko/docs/Web/API/RTCPeerConnection/onconnectionstatechange
+  pcServer.addEventListener("connectionstatechange", () => {
+    switch (pcServer.connectionState) {
+      case "connected":
+        // The connection has become fully connected
+        trace("[WebRTC] User is fully connected");
+        break;
+      case "disconnected":
+      case "failed":
+        // One or more transports has terminated unexpectedly or in an error
+        trace("[WebRTC] User is unexpectedly disconnected");
+        pcServer.close();
+        pcServer = null;
+        break;
+      case "closed":
+        // The connection has been closed
+        trace("[WebRTC] Connection closed");
+        pcServer.close();
+        pcServer = null;
+        break;
+    }
   });
 
   // onTrack은 알아서 되는듯. 일단 테스트 ㄱㄱ
 
-  serverSocket.on(OFFER, async (offerDesc) => {
-    // prepare recording
-    beforeOffer(pcServer);
-
-    try {
-      pcServer.setRemoteDescription(offerDesc);
-    } catch (error) {
-      return trace("Error while setRemoteDescription: ", error);
-    }
-
-    let answerDesc;
-    try {
-      answerDesc = await pcServer.createAnswer();
-    } catch (error) {
-      return trace("Error while creating answer: ", error);
-    }
-
-    try {
-      pcServer.setLocalDescription(answerDesc);
-    } catch (error) {
-      return trace("Error while setLocalDescription: ", error);
-    }
-
-    serverSocket.emit(ANSWER, answerDesc);
-  });
-
-  serverSocket.on(ICE_CANDIDATE, async (candidate) => {
+  serverSocket.on(NEW_PEER_ICE_CANDIDATE, async (candidate) => {
+    // Connection이 연결되기도 전에 closed 됐다고 해서 짜증나서 제거함
     try {
       await pcServer.addIceCandidate(candidate);
-      trace("Successfully added IceCandidate: ", candidate);
+      trace("Successfully added Ice Candidate: ");
     } catch (error) {
       trace("Error while adding an ICE Candidate: ", error.toString());
     }
   });
+
+  // 시작점
+  if (IS_CALLER) {
+    try {
+      trace("Creating Offer: ");
+      const offerDesc = await pcServer.createOffer();
+      await pcServer.setLocalDescription(offerDesc);
+      serverSocket.emit(OFFER, offerDesc);
+    } catch (error) {
+      return trace("Error while creating Offer: ", error);
+    }
+
+    serverSocket.on(ANSWER, async (answerDesc) => {
+      try {
+        trace("Received Offer: ");
+        await pcServer.setRemoteDescription(answerDesc);
+        trace("Connection Succeeeded!");
+      } catch (error) {
+        return trace("Error while setRemoteDescription: ", error);
+      }
+    });
+  } else {
+    serverSocket.on(OFFER, async (offerDesc) => {
+      try {
+        trace("Received Offer: ");
+        await pcServer.setRemoteDescription(offerDesc);
+      } catch (error) {
+        return trace("Error while setRemoteDescription: ", error);
+      }
+
+      let answerDesc;
+
+      try {
+        trace("Creating Answer: ");
+        answerDesc = await pcServer.createAnswer();
+      } catch (error) {
+        return trace("Error while creating answer: ", error);
+      }
+
+      try {
+        await pcServer.setLocalDescription(answerDesc);
+        serverSocket.emit(ANSWER, answerDesc);
+        trace("Connection Succeeeded!");
+      } catch (error) {
+        return trace("Error while setLocalDescription: ", error);
+      }
+    });
+  }
 });
 
 function _placeholder() {
@@ -181,6 +224,6 @@ function _placeholder() {
 
 // logging utility
 function trace(...arg) {
-  var now = (window.performance.now() / 1000).toFixed(3);
+  var now = (Date.now() / 1000).toFixed(3);
   console.log(now + ": ", ...arg);
 }

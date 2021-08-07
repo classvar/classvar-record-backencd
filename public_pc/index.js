@@ -1,11 +1,37 @@
 "use strict";
 
-const { ICE_SERVERS_CONFIG, ICE_CANDIDATE } = require("./pc_constants");
+const ICE_SERVERS_CONFIG = {
+  iceServers: [
+    {
+      urls: "stun:stun.l.google.com:19302",
+    },
+    {
+      urls: "stun:stun1.l.google.com:19302",
+    },
+    {
+      urls: "stun:stun2.l.google.com:19302",
+    },
+    {
+      urls: "stun:stun3.l.google.com:19302",
+    },
+    {
+      urls: "stun:stun4.l.google.com:19302",
+    },
+  ],
+};
+
+const OFFER = "offer";
+
+const ANSWER = "answer";
+
+const ICE_CANDIDATE = "icecandidate";
+
+const NEW_PEER_ICE_CANDIDATE = "new_peer_icecandidate";
 
 // websocket!
-const IP = "192.168.219.191";
+const IP = "localhost";
 const PORT = 3000;
-const socket = io(`https://${IP}:${PORT}/`);
+const socket = io(`https://${IP}:${PORT}/`, { autoConnect: false });
 
 const VIDEO_CONSTRAINTS = {
   width: { ideal: 1280 },
@@ -36,6 +62,8 @@ localVideo.addEventListener("loadedmetadata", function () {
   );
 });
 
+const IS_CALLER = false;
+
 let userMediaStream;
 let clientPc;
 
@@ -43,7 +71,10 @@ function start() {
   trace("Requesting local stream");
   startButton.disabled = true;
   navigator.mediaDevices
-    .getUserMedia(VIDEO_CONSTRAINTS)
+    .getUserMedia({
+      audio: true,
+      video: VIDEO_CONSTRAINTS,
+    })
     .then((stream) => {
       trace("Received local stream");
       localVideo.srcObject = stream;
@@ -89,33 +120,94 @@ function call() {
   trace("Created local peer connection object client:");
 
   clientPc.onicecandidate = (event) => {
-    socket.emit(ICE_CANDIDATE, event.candidate);
+    socket.emit(NEW_PEER_ICE_CANDIDATE, event.candidate);
     trace(
       "client: ICE candidate: \n" +
         (event.candidate ? event.candidate.candidate : "(null)")
     );
   };
 
-  clientPc.oniceconnectionstatechange = (event) => {
-    trace("client: ICE state: " + pc.iceConnectionState);
-    console.log("ICE state change event: ", event);
+  socket.on(NEW_PEER_ICE_CANDIDATE, (candidate) => {
+    trace("receiving new remote Ice Candidate: ");
+    clientPc
+      .addIceCandidate(candidate)
+      .then(() => {
+        trace("client: new Remote Ice Candidate: ");
+      })
+      .catch((e) => {
+        trace("Error adding new Remote Ice Candidate: ", e);
+      });
+  });
+
+  clientPc.oniceconnectionstatechange = () => {
+    trace("client: ICE state changed: " + clientPc.iceConnectionState);
   };
 
   clientPc.addStream(userMediaStream);
 
-  trace("client: createOffer start");
-  clientPc.createOffer().then((desc) => {
-    trace("Offer from client:\n" + desc.sdp);
-    trace("client: setLocalDescription");
+  // Start WebSocket Connect And do Offer/Answer
+  socket.connect();
+  if (IS_CALLER) {
+    // Answer 미리 등록해놓고
+    socket.on(ANSWER, (desc) => {
+      trace("received answer");
+      clientPc
+        .setRemoteDescription(desc)
+        .then(() => {
+          trace("client: setRemoteDescription complete");
+          trace("Connection Succeeeded!");
+        })
+        .catch((error) => {
+          trace(
+            "[Receive Answer] Failed to setRemoteDescription: " +
+              error.toString()
+          );
+        });
+    });
+
     clientPc
-      .setLocalDescription(desc)
-      .then(() => {
-        trace("client: setLocalDescription complete");
+      .createOffer()
+      .then((offerDesc) => {
+        clientPc.setLocalDescription();
+        trace("setLocalDescription");
+        return offerDesc;
+      })
+      .then((offerDesc) => {
+        trace("Offer from client");
+        socket.emit(OFFER, offerDesc);
       })
       .catch((error) => {
-        trace("Failed to setLocalDescription: " + error.toString());
+        trace(
+          "[Creating Offer] Failed to setLocalDescription: " + error.toString()
+        );
       });
-  });
+  } else {
+    socket.on(OFFER, (offerDesc) => {
+      trace("received offer");
+      clientPc
+        .setRemoteDescription(offerDesc)
+        .then(() => {
+          trace("client: setRemoteDescription complete");
+          return clientPc.createAnswer();
+        })
+        .catch((error) => {
+          trace("Failed to setRemoteDescription: " + error.toString());
+        })
+        .then((answerDesc) => {
+          clientPc.setLocalDescription(answerDesc);
+          return answerDesc;
+        })
+        .then((answerDesc) => {
+          trace("client: setLocalDescription complete");
+          trace("answer from client");
+          socket.emit(ANSWER, answerDesc);
+          trace("Connection Succeeeded!");
+        })
+        .catch((error) => {
+          trace("Failed to setLocalDescription: " + error.toString());
+        });
+    });
+  }
 }
 
 function hangup() {
@@ -124,6 +216,7 @@ function hangup() {
   clientPc = null;
   hangupButton.disabled = true;
   callButton.disabled = false;
+  socket.close();
 }
 
 // logging utility

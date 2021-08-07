@@ -1,4 +1,5 @@
-const ICE_SERVERS_CONFIG = {
+const PEER_CONNECTION_CONFIG = {
+  sdpSemantics: "unified-plan",
   iceServers: [
     {
       urls: "stun.l.google.com:19302",
@@ -24,4 +25,12 @@ const ANSWER = "answer";
 
 const ICE_CANDIDATE = "icecandidate";
 
-module.exports = { ICE_SERVERS_CONFIG, ICE_CANDIDATE, OFFER, ANSWER };
+const NEW_PEER_ICE_CANDIDATE = "new_peer_icecandidate";
+
+module.exports = {
+  PEER_CONNECTION_CONFIG,
+  ICE_CANDIDATE,
+  OFFER,
+  ANSWER,
+  NEW_PEER_ICE_CANDIDATE,
+};

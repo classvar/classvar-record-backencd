@@ -10,7 +10,7 @@ const ffmpeg = require("fluent-ffmpeg");
 ffmpeg.setFfmpegPath(ffmpegPath);
 const { StreamInput } = require("fluent-ffmpeg-multistream");
 
-const VIDEO_OUTPUT_SIZE = "320x240";
+const VIDEO_OUTPUT_SIZE = "1280x720";
 const VIDEO_OUTPUT_FILE = "./recording.mp4";
 
 let UID = 0;
@@ -87,10 +87,12 @@ function beforeOffer(peerConnection) {
           // -r frames
           // frame rate
           "-r",
-          "30",
+          "24",
         ])
         .addInput(new StreamInput(stream.audio).url)
         .addInputOptions(["-f s16le", "-ar 48k", "-ac 1"])
+        // .addOutputOptions(["-c:v libvpx", "-b:v 2M", "-c:a libvorbis"])
+        .addOutputOptions(["-b:v 2M"])
         .on("start", () => {
           console.log("Start recording >> ", stream.recordPath);
         })

@@ -1,4 +1,5 @@
 /files/*
+/files_server_side_record/*
 /node_modules
 /security/cert.key
 /security/cert.pem
