@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta id="theme-color" name="theme-color" content="#fff" />
+
+    <base target="_blank" />
+
+    <title>Record on server-side</title>
+
+    <link rel="stylesheet" href="global.css" />
+
+    <style>
+      button {
+        margin: 0 20px 0 0;
+        width: 85.9px;
+      }
+
+      button#hangupButton {
+        margin: 0;
+      }
+
+      p.borderBelow {
+        margin: 0 0 1.5em 0;
+        padding: 0 0 1.5em 0;
+      }
+
+      @media (max-width: 400px) {
+        button {
+          width: 83px;
+        }
+
+        button {
+          margin: 0 11px 10px 0;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="container">
+      <h1>Record on Server-side</h1>
+
+      <video id="localVideo" autoplay muted playsinline></video>
+
+      <div>
+        <button id="startButton">Start</button>
+        <button id="callButton">Call</button>
+        <button id="hangupButton">Hang Up</button>
+      </div>
+      <script src="/socket.io/socket.io.js"></script>
+      <script src="index.js"></script>
+    </div>
+  </body>
+</html>

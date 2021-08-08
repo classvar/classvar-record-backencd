@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node server.js",
+    "start-serverside": "__public_path__=public_serverside_record node server_ffmpeg_wrapper.js",
+    "start-clientside": "__public_path__=public_clientside_record node server_mediarecorder.js",
     "gen-pem": "rm security/cert.* && openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout security/cert.key -out security/cert.pem -config security/req.cnf -sha256",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

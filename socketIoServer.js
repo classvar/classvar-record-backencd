@@ -12,7 +12,7 @@ const secureServer = https.createServer(httpsOptions, app);
 const { Server } = require("socket.io");
 const io = new Server(secureServer);
 
-app.use(express.static("public_pc"));
+app.use(express.static(process.env.__public_path__));
 
 secureServer.listen(3000, "0.0.0.0", () => {
   console.log("listening on *:3000");

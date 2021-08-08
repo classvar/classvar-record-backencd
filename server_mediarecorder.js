@@ -1,3 +1,4 @@
+const fs = require("fs");
 const { io } = require("./socketIoServer");
 
 /*
@@ -10,7 +11,6 @@ TODO:
 => 애초에 timeslice를 작게 주면 되겠네. (이러면 RTP보다 더 빠를듯. slice 때문에)
 
 4. 파일 병합 문제
-
 */
 let writer = fs.createWriteStream(
   `./files/recorded_${Number(Date.now() / 1000)}.mp4`
