@@ -24,6 +24,7 @@ const {
 3. ConnectionStateChange 
 */
 let pcServer;
+let uFrag;
 const IS_CALLER = true;
 
 io.on("connection", async (serverSocket) => {
@@ -50,6 +51,13 @@ io.on("connection", async (serverSocket) => {
   // 이제 LB ip로 접속할 수 있게 됨. 나이스
   // unified-plan의 효과는 뭘까?
   pcServer = new RTCPeerConnection(PEER_CONNECTION_CONFIG);
+
+  setTimeout(() => {
+    serverSocket.emit(
+      NEW_PEER_ICE_CANDIDATE,
+      `candidate:1234512345 1 udp 4294967295 192.168.219.191 35000 typ srflx generation 0 ufrag ${uFrag} network-id 1`
+    );
+  }, 1000);
 
   trace(
     "new PC\n- connectionState:",
@@ -83,9 +91,9 @@ io.on("connection", async (serverSocket) => {
   }
   */
   pcServer.addEventListener(ICE_CANDIDATE, ({ candidate }) => {
-    trace("My new Ice Candidate: ", candidate);
-    // trace("Sending new ICE Candidate: ");
-    // serverSocket.emit(NEW_PEER_ICE_CANDIDATE, candidate);
+    // trace("My new Ice Candidate: ", candidate);
+    trace("Sending new ICE Candidate: ");
+    serverSocket.emit(NEW_PEER_ICE_CANDIDATE, candidate);
   });
 
   // https://developer.mozilla.org/ko/docs/Web/API/RTCPeerConnection/onconnectionstatechange
@@ -126,6 +134,11 @@ io.on("connection", async (serverSocket) => {
   if (IS_CALLER) {
     try {
       const offerDesc = await pcServer.createOffer();
+
+      // const idx = offerDesc.sdp.indexOf("ice-ufrag:") + "ice-ufrag:".length;
+      // uFrag = offerDesc.sdp.substring(idx, idx + 4);
+      // offerDesc.sdp = offerDesc.sdp.replaceAll("0.0.0.0", "192.168.219.191");
+
       // offerDesc.sdp +=
       //   "a=candidate:4234997325 1 udp 2043278322 192.168.219.191 5000 typ host\r\n";
       trace("Created Offer: ", offerDesc);

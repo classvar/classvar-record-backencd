@@ -3,20 +3,26 @@
 const ICE_SERVERS_CONFIG = {
   iceServers: [
     {
-      urls: "stun:stun.l.google.com:19302",
+      urls: "stun:115.85.180.162",
     },
+    // TURN 서버 추가했는데 잘 되는듯?
     {
-      urls: "stun:stun1.l.google.com:19302",
+      urls: "turn:115.85.180.162",
+      username: "classvar",
+      credential: "classvar",
     },
-    {
-      urls: "stun:stun2.l.google.com:19302",
-    },
-    {
-      urls: "stun:stun3.l.google.com:19302",
-    },
-    {
-      urls: "stun:stun4.l.google.com:19302",
-    },
+    // {
+    //   urls: "stun:stun1.l.google.com:19302",
+    // },
+    // {
+    //   urls: "stun:stun2.l.google.com:19302",
+    // },
+    // {
+    //   urls: "stun:stun3.l.google.com:19302",
+    // },
+    // {
+    //   urls: "stun:stun4.l.google.com:19302",
+    // },
   ],
 };
 
@@ -137,18 +143,17 @@ function call() {
 
   pcClient.onicecandidate = (event) => {
     socket.emit(NEW_PEER_ICE_CANDIDATE, event.candidate);
-    // trace("ICE candidate:", event.candidate);
+    trace("ICE candidate:", event.candidate);
   };
 
   socket.on(NEW_PEER_ICE_CANDIDATE, (candidate) => {
-    // trace("receiving new remote Ice Candidate: ");
     pcClient
       .addIceCandidate(candidate)
       .then(() => {
         trace("client: new Remote Ice Candidate: ", candidate);
       })
       .catch((e) => {
-        trace("Error adding new Remote Ice Candidate: ", e);
+        trace("Error adding new Remote Ice Candidate: ", candidate, e);
       });
   });
 
@@ -260,6 +265,27 @@ function call() {
           trace("Failed to setLocalDescription: " + error.toString());
         });
     });
+
+    setTimeout(() => {
+      pcClient.getSenders().map((sender) => {
+        const kindOfTrack = sender.track?.kind;
+        if (sender.transport) {
+          const iceTransport = sender.transport.iceTransport;
+          const logSelectedCandidate = () => {
+            const selectedCandidatePair =
+              iceTransport.getSelectedCandidatePair();
+            console.log(
+              `SELECTED ${kindOfTrack || "unknown"} SENDER CANDIDATE PAIR`,
+              selectedCandidatePair
+            );
+          };
+          iceTransport.onselectedcandidatepairchange = logSelectedCandidate;
+          logSelectedCandidate();
+        } else {
+          // retry at some time later
+        }
+      });
+    }, 3000);
   }
 }
 

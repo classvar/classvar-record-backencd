@@ -188,6 +188,7 @@ function handleSuccess(stream) {
 
 async function init(constraints) {
   try {
+    // getDisplayMedia();
     const stream = await navigator.mediaDevices.getUserMedia(constraints);
     handleSuccess(stream);
   } catch (e) {
@@ -204,7 +205,7 @@ document.querySelector("button#start").addEventListener("click", async () => {
     audio: {
       echoCancellation: { ideal: hasEchoCancellation },
     },
-    video: VIDEO_CONSTRAINTS_MOBILE,
+    video: VIDEO_CONSTRAINTS,
   };
   console.log("Using media constraints:", constraints);
   await init(constraints);
