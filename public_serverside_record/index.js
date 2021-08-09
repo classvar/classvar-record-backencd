@@ -35,8 +35,8 @@ const ICE_CANDIDATE = "icecandidate";
 const NEW_PEER_ICE_CANDIDATE = "new_peer_icecandidate";
 
 // websocket!
-const IP = "192.168.219.191";
-const PORT = 3000;
+const IP = process.env.RECORD_SERVER_IP;
+const PORT = process.env.RECORD_SERVER_PORT;
 const socket = io(`https://${IP}:${PORT}/`, { autoConnect: false });
 
 // https://stackoverflow.com/questions/37390574/webrtc-acoustic-echo-cancelation
