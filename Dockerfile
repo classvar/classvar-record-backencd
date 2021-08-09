@@ -16,4 +16,4 @@ ENV RECORD_SERVER_PORT 3000
 
 EXPOSE 3000
 
-ENTRYPOINT npm run start-serverside
+ENTRYPOINT npm run override-frontend-ip && npm run start-serverside
