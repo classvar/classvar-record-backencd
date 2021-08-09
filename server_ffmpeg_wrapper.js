@@ -52,12 +52,13 @@ io.on("connection", async (serverSocket) => {
   // unified-plan의 효과는 뭘까?
   pcServer = new RTCPeerConnection(PEER_CONNECTION_CONFIG);
 
-  setTimeout(() => {
-    serverSocket.emit(
-      NEW_PEER_ICE_CANDIDATE,
-      `candidate:1234512345 1 udp 4294967295 192.168.219.191 35000 typ srflx generation 0 ufrag ${uFrag} network-id 1`
-    );
-  }, 1000);
+  // 이거 안 됨.
+  // setTimeout(() => {
+  //   serverSocket.emit(
+  //     NEW_PEER_ICE_CANDIDATE,
+  //     `candidate:1234512345 1 udp 4294967295 192.168.219.191 35000 typ srflx generation 0 ufrag ${uFrag} network-id 1`
+  //   );
+  // }, 1000);
 
   trace(
     "new PC\n- connectionState:",
