@@ -81,7 +81,7 @@ localVideo.addEventListener("loadedmetadata", function () {
 const IS_CALLER = false;
 
 let userMediaStream;
-let clientPc;
+let pcClient;
 
 function start() {
   trace("Requesting local stream");
@@ -132,29 +132,29 @@ function call() {
   if (audioTracks.length > 0) {
     trace("Using audio device: " + audioTracks[0].label);
   }
-  clientPc = new RTCPeerConnection(ICE_SERVERS_CONFIG);
+  pcClient = new RTCPeerConnection(ICE_SERVERS_CONFIG);
   trace("Created local peer connection object client:");
 
-  clientPc.onicecandidate = (event) => {
+  pcClient.onicecandidate = (event) => {
     socket.emit(NEW_PEER_ICE_CANDIDATE, event.candidate);
     // trace("ICE candidate:", event.candidate);
   };
 
   socket.on(NEW_PEER_ICE_CANDIDATE, (candidate) => {
     // trace("receiving new remote Ice Candidate: ");
-    clientPc
+    pcClient
       .addIceCandidate(candidate)
       .then(() => {
-        // trace("client: new Remote Ice Candidate: ");
+        trace("client: new Remote Ice Candidate: ", candidate);
       })
       .catch((e) => {
         trace("Error adding new Remote Ice Candidate: ", e);
       });
   });
 
-  clientPc.oniceconnectionstatechange = () => {
-    clientPc.addEventListener("connectionstatechange", () => {
-      switch (clientPc.connectionState) {
+  pcClient.oniceconnectionstatechange = () => {
+    pcClient.addEventListener("connectionstatechange", () => {
+      switch (pcClient.connectionState) {
         case "connected":
           // The connection has become fully connected
           trace("[WebRTC] User is fully connected");
@@ -174,7 +174,7 @@ function call() {
     });
   };
 
-  clientPc.addStream(userMediaStream);
+  pcClient.addStream(userMediaStream);
 
   // 선호 코덱을 가장 위에 배치한 배열을 setCodecPreferences로 넘기는 것.
   const { codecs } = RTCRtpSender.getCapabilities("video");
@@ -189,7 +189,7 @@ function call() {
   codecs.splice(selectedCodecIndex, 1);
   codecs.unshift(selectedCodec);
   console.log(codecs);
-  const transceiver = clientPc
+  const transceiver = pcClient
     .getTransceivers()
     .find(
       (t) => t.sender && t.sender.track === userMediaStream.getVideoTracks()[0]
@@ -203,7 +203,7 @@ function call() {
     // Answer 미리 등록해놓고
     socket.on(ANSWER, (desc) => {
       trace("received answer");
-      clientPc
+      pcClient
         .setRemoteDescription(desc)
         .then(() => {
           trace("client: setRemoteDescription complete");
@@ -217,10 +217,10 @@ function call() {
         });
     });
 
-    clientPc
+    pcClient
       .createOffer()
       .then((offerDesc) => {
-        clientPc.setLocalDescription();
+        pcClient.setLocalDescription();
         trace("setLocalDescription");
         return offerDesc;
       })
@@ -235,24 +235,24 @@ function call() {
       });
   } else {
     socket.on(OFFER, (offerDesc) => {
-      trace("received offer");
+      trace("received offer:", offerDesc.sdp);
 
-      clientPc
+      pcClient
         .setRemoteDescription(offerDesc)
         .then(() => {
-          trace("client: setRemoteDescription complete");
-          return clientPc.createAnswer();
+          trace("client: setRemoteDescription complete", offerDesc);
+          return pcClient.createAnswer();
         })
         .catch((error) => {
           trace("Failed to setRemoteDescription: " + error.toString());
         })
         .then((answerDesc) => {
-          clientPc.setLocalDescription(answerDesc);
+          pcClient.setLocalDescription(answerDesc);
           return answerDesc;
         })
         .then((answerDesc) => {
           trace("client: setLocalDescription complete");
-          trace("answer from client");
+          trace("answer from client", answerDesc);
           socket.emit(ANSWER, answerDesc);
           trace("Connection Succeeeded!");
         })
@@ -268,12 +268,12 @@ function hangup() {
   hangupButton.disabled = true;
   callButton.disabled = false;
   socket.close();
-  clientPc.close();
-  clientPc = null;
+  pcClient.close();
+  pcClient = null;
 }
 
 // logging utility
-function trace(arg) {
+function trace(...args) {
   const now = (window.performance.now() / 1000).toFixed(3);
-  console.log(now + ": ", arg);
+  console.log(now + ": ", ...args);
 }

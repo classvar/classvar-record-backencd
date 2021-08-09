@@ -1,4 +1,1 @@
-file './recording-320x180-2.mp4'
-file './recording-480x270-3.mp4'
-file './recording-640x360-4.mp4'
-file './recording-960x540-5.mp4'
+file './recording-360x640-1.mp4'

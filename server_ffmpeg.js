@@ -255,6 +255,9 @@ function beforeOffer(peerConnection) {
         "copy",
         `${VIDEO_OUTPUT_FILE}`,
       ];
+      // exec, spawn 둘 다 subprocess로 실행되는 거 같긴 한데 잘 모르겠다.
+      // 굳이 spawn을 쓰는 이유:
+      // https://stackoverflow.com/questions/42012342/running-ffmpeg-via-nodejs-error
       const mergeProcess = spawn(cmd, args);
       mergeProcess.stdout.on("data", (data) => {
         console.log(`stdout: ${data}`);

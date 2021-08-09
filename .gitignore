@@ -3,3 +3,5 @@
 /node_modules
 /security/cert.key
 /security/cert.pem
+*.mp4
+*.webm

@@ -116,7 +116,7 @@ io.on("connection", async (serverSocket) => {
     // Connection이 연결되기도 전에 closed 됐다고 해서 짜증나서 제거함
     try {
       await pcServer.addIceCandidate(candidate);
-      // trace("Successfully added Ice Candidate: ", candidate);
+      trace("Successfully added Ice Candidate: ", candidate);
     } catch (error) {
       trace("Error while adding an ICE Candidate: ", error.toString());
     }
@@ -125,8 +125,10 @@ io.on("connection", async (serverSocket) => {
   // 시작점
   if (IS_CALLER) {
     try {
-      trace("Creating Offer: ");
       const offerDesc = await pcServer.createOffer();
+      // offerDesc.sdp +=
+      //   "a=candidate:4234997325 1 udp 2043278322 192.168.219.191 5000 typ host\r\n";
+      trace("Created Offer: ", offerDesc);
       await pcServer.setLocalDescription(offerDesc);
       serverSocket.emit(OFFER, offerDesc);
     } catch (error) {
@@ -135,7 +137,7 @@ io.on("connection", async (serverSocket) => {
 
     serverSocket.on(ANSWER, async (answerDesc) => {
       try {
-        trace("Received Offer: ");
+        trace("Received Answer: ", answerDesc);
         await pcServer.setRemoteDescription(answerDesc);
         trace("Connection Succeeeded!");
       } catch (error) {
